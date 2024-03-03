@@ -18,18 +18,12 @@ int main(int argc, char *argv[])
     for (int i = 2; i < argc; i++)
     {
         floorReq[i - 1] = atoi(argv[i]);
-        cout << floorReq[i-1] << endl;
     }
     sort(floorReq+1, floorReq + numFloors);
     floorReq[0] = startFloor;
-    cout << "------------------------------" << endl;
-    for (int i = 0; i < numFloors; i++)
-    {
-        cout << floorReq[i] << endl;
-    }
     const int floorTravelTime = 10;
-    int distUp = floorReq[(numFloors - 1)] - startFloor;
-    int distDown = startFloor - floorReq[1];
+    int distUp = max(0, (floorReq[(numFloors - 1)] - startFloor));
+    int distDown = max(0, startFloor - floorReq[1]);
     cout << "Start floor: " << startFloor << endl;
     cout << "Dist down: " << distDown << endl;
     cout << "Dist up: " << distUp << endl;
