@@ -3,6 +3,7 @@
 #include <fstream>
 #include <algorithm> // Used for sort
 #include "floor_request.h"
+#include "human_detection.h" // Temp
 using namespace std;
 
 /**
@@ -32,6 +33,8 @@ int main(int argc, char *argv[])
     while (getline(inputFile, line))
     {
         floorRequest::floorRequest floorData(line);
+        HumanDetector hd;
+        hd.loadImage(floorData.image);
     }
     return 0;
 }
