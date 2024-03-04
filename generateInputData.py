@@ -14,7 +14,6 @@ parser.add_argument("-t", "--time", type=int, default=30, help="Max time delta b
 args = parser.parse_args()
 
 def main(args):
-    print(args.number)
     random.seed(args.seed)
     fields = ['floor', 'direction', 'image', 'time']
     with open(args.output, 'w') as csvfile:
@@ -25,6 +24,8 @@ def main(args):
             direction = random.randint(-1, 1)
             time = random.randint(0, args.time)
             image = random.choice(os.listdir(args.data))
+            image = args.data + image
+            image = os.path.abspath(image)
             row = [floor, direction, image, time]
             csvwriter.writerow(row)
 
