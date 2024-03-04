@@ -32,8 +32,8 @@ int main(int argc, char *argv[])
     cout << "Parsing: " << line << endl;
     while (getline(inputFile, line))
     {
-        floorRequest::floorRequest floorData(line);
-        HumanDetector hd;
+        flreq::floorRequest floorData(line);
+        hd::HumanDetector hd;
         hd.loadImage(floorData.image);
     }
     return 0;

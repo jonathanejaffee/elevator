@@ -5,7 +5,7 @@
 #include <vector>
 using namespace std;
 
-namespace floorRequest
+namespace flreq
 {
 struct floorRequest
 {

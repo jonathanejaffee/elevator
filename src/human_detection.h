@@ -7,8 +7,8 @@
 using namespace cv;
 using namespace cv::ml;
 using namespace std;
-//namespace HumanDetector
-//{
+namespace hd
+{
 class HumanDetector
 {
     public:
@@ -19,4 +19,4 @@ class HumanDetector
         
 
 };
-//}
+}
