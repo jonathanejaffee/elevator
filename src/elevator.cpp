@@ -150,14 +150,37 @@ int Elevator::checkTargMatch()
     if (!mFloors.empty())
     {
         doneProcess = false;
-        flreq::floorRequest targFloor = (mDirect > 0) ? mFloors.back() : mFloors.front();
-        diff = targFloor.floor - curr;
+        //flreq::floorRequest targFloor = (mDirect > 0) ? mFloors.back() : mFloors.front();
+        auto it = (mDirect > 0) ? (mFloors.end() - 1) : mFloors.begin();
+        auto itOrg = it;
+        diff = it->floor - curr;
+
+        auto findBest = [&] () -> deque<flreq::floorRequest>::iterator
+        {
+            deque<flreq::floorRequest>::iterator bestIt = it;
+            int newDiff = diff;
+            while (newDiff == 0)
+            {
+                //cout << mDirect << endl;
+                if ((it -> direction == mDirect) || (it -> direction == 0) || (mDirect == 0))
+                {
+                    return it;
+                }
+                (mDirect > 0) ? it-- : it++;
+                newDiff = it->floor - mCurrentFloor;
+            }
+            return bestIt;
+        };
         //cout << "diff: " << diff << endl;
         if (diff == 0) // at one of the extremities
         {
-            (mDirect > 0) ? mFloors.pop_back() : mFloors.pop_front();
+            deque<flreq::floorRequest>::iterator bestIt = findBest();
+            //(mDirect > 0) ? mFloors.pop_back() : mFloors.pop_front();
             cout << "Elevator hit END target floor: ";
-            targFloor.print();
+            bestIt->print();
+            mFloors.erase(bestIt);
+            return diff;
+
             //mDirect = 0;
             //this_thread::sleep_for(1s);
             //mDirect *= -1;
