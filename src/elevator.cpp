@@ -44,11 +44,6 @@ int Elevator::getCurrentFloor()
 void Elevator::addRequest(flreq::floorRequest floor)
 {
     lock_guard<mutex> lock(mMutexFloors);
-    //if ((floor.direction != 0) && floor.numPpl < 1)
-    //{
-    //    cout << "not enough people" << endl;
-    //    return;
-    //}
     cout << "Adding Target Floor: " << floor.floor << endl; 
     mFloors.push_front(floor);
     sort(mFloors.begin(), mFloors.end());
@@ -153,17 +148,14 @@ bool Elevator::checkTargMatch()
         else
         {
             deque<flreq::floorRequest>::iterator hit = searchReqList(diff);
-            //deque<flreq::floorRequest>::iterator it;
             if (hit != mFloors.end())
             {
                 cout << "Elevator hit target floor: ";
                 hit -> print();
                 mFloors.erase(hit);
                 stopped = true;
-                //hit = searchReqList();
             }
         }
-        //cout << "req sz: " << mFloors.size() << endl;
     }
     else
     {
@@ -181,32 +173,17 @@ void Elevator::runElevator()
     bool stop = true;
     while (mRun)
     {
-        //int curr = getCurrentFloor();
-        //cout << "111" << endl;
-        //int dFloors = checkTargMatch();
-        //cout << "222" << endl;
-        //int numMoves = 0;
-        //while ((dFloors != 0) && mRun)
-        //{
-            //cout << "333" << endl;
+        this_thread::sleep_for(2s);
+        if (!stop)
+        {
+            incCurrentFloor();
+        }
+        else
+        {
+            cout << "stop" << endl;
             this_thread::sleep_for(2s);
-            if (!stop)
-            {
-                incCurrentFloor(); //(dFloors > 0) ? incCurrentFloor(1) : incCurrentFloor(-1);
-            }
-            else
-            {
-                cout << "stop" << endl;
-                this_thread::sleep_for(2s);
-            }
-            //target = getTargetFloor();
-            //curr = getCurrentFloor();
-            stop = checkTargMatch();
-            //cout << "dfloors: " << dFloors << endl;
-            //numMoves++;
-        //}
-        //this_thread::sleep_for(2s);
-
+        }
+        stop = checkTargMatch();
     }
 }
 
