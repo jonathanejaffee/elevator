@@ -11,11 +11,11 @@ namespace hd
 {
 class HumanDetector
 {
-    public:
-        HumanDetector(){};
-        ~HumanDetector(){};
-        void loadImage(string imgPath);
-        //void detectHumans();
+public:
+    HumanDetector(){};
+    ~HumanDetector(){};
+    void loadImage(string imgPath);
+    //void detectHumans();
         
 
 };
