@@ -107,6 +107,20 @@ vector<int> Elevator::searchReqList()
 {
     vector<int> matches;
     //lock_guard<mutex> lock(mMutexFloors);
+
+    //if (mCurrentFloor == mFloors.back().floor)
+    //{
+    //    //cout << "1111" <<endl;
+    //    matches.push_back(mFloors.size()-1);
+    //    return matches;
+    //}
+    //else if (mCurrentFloor == mFloors.front().floor)
+    //{
+    //    matches.push_back(0);
+    //    //cout << "2222" << endl;
+    //    return matches;
+    //}
+
     if (mDirect == 1) // going up
     {
         int idx = 0;
@@ -114,7 +128,7 @@ vector<int> Elevator::searchReqList()
         {
             if (mFloors[idx].floor == mCurrentFloor)
             {
-                if ((mFloors[idx].direction == 1) || (mFloors[idx].direction == 0))
+                if ((mFloors[idx].direction == 1) || (mFloors[idx].direction == 0) || (idx == 0))
                 {
                     matches.push_back(idx);
                 }
@@ -131,12 +145,13 @@ vector<int> Elevator::searchReqList()
     }
     else if (mDirect == -1)
     {
-        int idx = mFloors.size() - 1;
+        int sz = mFloors.size() - 1;
+        int idx = sz;
         while ((mFloors[idx].floor >= mCurrentFloor) && (idx >= 0))
         {
             if (mFloors[idx].floor == mCurrentFloor)
             {
-                if ((mFloors[idx].direction == -1) || (mFloors[idx].direction == 0))
+                if ((mFloors[idx].direction == -1) || (mFloors[idx].direction == 0) || (idx == sz))
                 {
                     matches.push_back(idx);
                 }
@@ -171,6 +186,8 @@ int Elevator::checkTargMatch(int curr)
             (mDirect > 0) ? mFloors.pop_back() : mFloors.pop_front();
             cout << "Elevator hit END target floor: ";
             targFloor.print();
+            //mDirect = 0;
+            //this_thread::sleep_for(1s);
             mDirect *= -1;
         }
         else
@@ -210,7 +227,7 @@ void Elevator::runElevator()
             //cout << "dfloors: " << dFloors << endl;
             //numMoves++;
         }
-        this_thread::sleep_for(1s);
+        //this_thread::sleep_for(1s);
         // set direct to 0
         //mMutexFloors.lock();
         //if (!mFloors.empty())
