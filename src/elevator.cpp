@@ -25,11 +25,6 @@ Elevator::~Elevator()
     mRun = false;
 }
 
-//void Elevator::setCurrentFloor(int floor)
-//{
-//    lock_guard<mutex> lock(mMutexFloors); // Locks mutex, automatic storage duration, gurantees unlock on exit (ot of scope) of this function
-//    mCurrentFloor = floor;
-//}
 
 int Elevator::incCurrentFloor() //int inc)
 {
@@ -44,12 +39,6 @@ int Elevator::getCurrentFloor()
     return mCurrentFloor;
 }
 
-//int Elevator::getTargetFloor()
-//{
-//    lock_guard<mutex> lock(mMutexFloors);
-//
-//    return (mFloors.empty() ? getCurrentFloor() : mFloors.back());
-//}
 
 void Elevator::addRequest(flreq::floorRequest floor)
 {
@@ -70,107 +59,47 @@ void Elevator::addRequest(flreq::floorRequest floor)
         distUp += PENALTY_FACTOR;
     }
     int distDown = max(0, (currPos - mFloors.front().floor));
-    //cout << "Dist up: " << distUp << endl;
-    //cout << "Dist down: " << distDown << endl;
 
-
-   if ((mFloors.front().direction == -1) && (distDown > 0))
+    if ((mFloors.front().direction == -1) && (distDown > 0))
     {
         distDown += PENALTY_FACTOR;
     }
 
     int dDist = distUp - distDown;
-    cout << "dDist: " << dDist << endl;
-    if (dDist == 0)
+    if (distUp == 0)
     {
-        //if ((distUp > 0) || (distDown > 0))
-        //{
-        //    mDirect = 1;
-        //}
-        //else
-        //{
-        //    mDirect = 0;
-        //}
+        mDirect = -1;
+    }
+    else if (distDown == 0)
+    {
+        mDirect = 1;
     }
     else
     {
-        if (distUp == 0)
-        {
-            mDirect = -1;
-        }
-        else if (distDown == 0)
-        {
-            mDirect = 1;
-        }
-        else
-        {
-            mDirect = dDist/abs(dDist);
-        }
-        //mDirect = -1;
+        mDirect = dDist/abs(dDist);
     }
 
-   // if ((distUp < 1) && (distDown < 1))
-   // {
-   //     mDirect = 0;
-   // }
-   // else if ((distUp > 0) && (distDown <= 0))
-   // {
-   //     mDirect = 1;
-   // }
-   // else if ((distDown > 0) && (distUp <= 0))
-   // {
-   //     mDirect = -1;
-   // }
-   // else if ((distUp < distDown))
-   // {
-   //     mDirect = 1;
-   //    // cout << "1" << endl;
-   // }
-   // else if ((distDown <= distUp))
-   // {
-   //     mDirect = -1; // moving up
-   //  //   cout << "-1, " << distDown << endl;
-   // }
-   //// cout << "MDIRECT: " << mDirect << endl;
 }
 
 vector<deque<flreq::floorRequest>::iterator> Elevator::searchReqList()
 {
     vector<deque<flreq::floorRequest>::iterator> matches;
-    //lock_guard<mutex> lock(mMutexFloors);
-
-    //if (mCurrentFloor == mFloors.back().floor)
-    //{
-    //    //cout << "1111" <<endl;
-    //    matches.push_back(mFloors.size()-1);
-    //    return matches;
-    //}
-    //else if (mCurrentFloor == mFloors.front().floor)
-    //{
-    //    matches.push_back(0);
-    //    //cout << "2222" << endl;
-    //    return matches;
-    //}
 
     auto match = [&cf = as_const(mCurrentFloor)](const flreq::floorRequest& fl) -> bool { return (fl.floor == cf); };
 
     auto it = find_if(mFloors.begin(), mFloors.end(), match);
     while (it != mFloors.end())
     {
-        cout << "wee" << endl;
         if ((it == mFloors.begin()) || (it == (mFloors.end() - 1)))
         {
-            cout << "MATCH1" << endl;
             matches.push_back(it);
         }
         else if ((it -> direction == mDirect) || (it -> direction == 0))
         {
-            cout << "MATCH2" << endl;
             matches.push_back(it);
         }
         else if (it -> numPpl > 2)
         {
-            cout << "MATCH3" << endl;
             matches.push_back(it);
             bool changeDir = (it -> direction == 1) ? (mFloors.back().floor > mCurrentFloor) : (mFloors.front().floor < mCurrentFloor);
             if (changeDir)
@@ -182,62 +111,6 @@ vector<deque<flreq::floorRequest>::iterator> Elevator::searchReqList()
         }
         it = find_if(it+1, mFloors.end(), match);
     }
-
-    //if (mDirect == 1) // going up
-    //{
-    //    int idx = 0;
-    //    while ((mFloors[idx].floor <= mCurrentFloor) && (idx < mFloors.size()))
-    //    {
-    //        if (mFloors[idx].floor == mCurrentFloor)
-    //        {
-    //            if ((mFloors[idx].direction == 1) || (mFloors[idx].direction == 0) || (idx == 0))
-    //            {
-    //                matches.push_back(idx);
-    //            }
-    //            else if (mFloors[idx].numPpl > 2)
-    //            {
-    //                matches.push_back(idx);
-    //                if (mFloors.front().floor < mCurrentFloor)
-    //                {
-    //                    mDirect = -1;
-    //                    cout << "Too many ppl swapping direct for: ";
-    //                    mFloors[idx].print();
-    //                }
-    //            }
-    //        }
-    //        idx++;
-    //    }
-    //}
-    //else if (mDirect == -1)
-    //{
-    //    int sz = mFloors.size() - 1;
-    //    int idx = sz;
-    //    while ((mFloors[idx].floor >= mCurrentFloor) && (idx >= 0))
-    //    {
-    //        if (mFloors[idx].floor == mCurrentFloor)
-    //        {
-    //            if ((mFloors[idx].direction == -1) || (mFloors[idx].direction == 0) || (idx == sz))
-    //            {
-    //                matches.push_back(idx);
-    //            }
-    //            else if (mFloors[idx].numPpl > 2)
-    //            {
-    //                matches.push_back(idx);
-    //                if (mFloors.back().floor > mCurrentFloor)
-    //                {
-    //                    mDirect = 1;
-    //                    cout << "Too many ppl swapping direct for: ";
-    //                    mFloors[idx].print();
-    //                }
-    //            }
-    //        }
-    //        idx--;
-    //    }
-    //}
-    //else
-    //{
-    //    cout << "this shouldnt be 0" << endl;
-    //}
     return matches;
 }
 
@@ -297,15 +170,6 @@ void Elevator::runElevator()
             //cout << "dfloors: " << dFloors << endl;
             //numMoves++;
         }
-        //this_thread::sleep_for(1s);
-        // set direct to 0
-        //mMutexFloors.lock();
-        //if (!mFloors.empty())
-        //{
-        //    int newTarg = mFloors.back();
-        //    mFloors.pop_back();
-        //    setTargetFloor(newTarg);
-        //}
-        //mMutexFloors.unlock();
+
     }
 }
