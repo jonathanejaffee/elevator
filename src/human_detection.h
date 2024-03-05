@@ -14,7 +14,7 @@ class HumanDetector
 public:
     HumanDetector(){};
     ~HumanDetector(){};
-    void loadImage(string imgPath);
+    int loadImage(string imgPath);
     //void detectHumans();
         
 

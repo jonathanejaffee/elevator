@@ -18,7 +18,7 @@ public:
     Elevator(unsigned int speed, int startingFloor);
     ~Elevator();
     //void setCurrentFloor(int floor);
-    int incCurrentFloor(int inc);
+    int incCurrentFloor(); //int inc);
     int getCurrentFloor();
     //int getTargetFloor();
     void addRequest(flreq::floorRequest floor);
@@ -34,6 +34,7 @@ private:
     //mutex mMutexCurrent;
     mutex mMutexFloors;
     deque<flreq::floorRequest> mFloors;
+    unsigned int mNumPpl;
 
 };
 }

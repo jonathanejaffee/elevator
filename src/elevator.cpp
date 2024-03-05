@@ -9,7 +9,8 @@ using namespace ele;
 Elevator::Elevator(unsigned int speed, int startingFloor) : mElevatorSpeed(speed),
     mCurrentFloor(startingFloor),
     mRun(true),
-    mDirect(1)
+    mDirect(1),
+    mNumPpl(0)
 {
     cout << "Creating new Elevator with speed: " << mElevatorSpeed << ", starting floor: " << startingFloor << endl;
     // Need to spawn 2 threads - the elevator dynamics thread, which only cares about moving the elevator to a single target,
@@ -29,10 +30,10 @@ Elevator::~Elevator()
 //    mCurrentFloor = floor;
 //}
 
-int Elevator::incCurrentFloor(int inc)
+int Elevator::incCurrentFloor() //int inc)
 {
     lock_guard<mutex> lock(mMutexFloors); // Locks mutex, automatic storage duration, gurantees unlock on exit (ot of scope) of this function
-    mCurrentFloor += inc;
+    mCurrentFloor += mDirect;
     cout << "Current Floor: " << mCurrentFloor << endl;
     return mCurrentFloor;
 }
@@ -52,29 +53,54 @@ int Elevator::getCurrentFloor()
 void Elevator::addRequest(flreq::floorRequest floor)
 {
     lock_guard<mutex> lock(mMutexFloors);
+    //if ((floor.direction != 0) && floor.numPpl < 1)
+    //{
+    //    cout << "not enough people" << endl;
+    //    return;
+    //}
     cout << "Adding Target Floor: " << floor.floor << endl; 
     mFloors.push_front(floor);
     sort(mFloors.begin(), mFloors.end());
     int currPos = mCurrentFloor + mDirect;
     const int PENALTY_FACTOR = 2;
     int distUp = max(0, (mFloors.back().floor - currPos));
-    if (mFloors.back().direction == 1)
+    if ((mFloors.back().direction == 1) && (distUp > 0))
     {
         distUp += PENALTY_FACTOR;
     }
     int distDown = max(0, (currPos - mFloors.front().floor));
-    if (mFloors.front().direction == -1)
+    //cout << "Dist up: " << distUp << endl;
+    //cout << "Dist down: " << distDown << endl;
+
+
+   if ((mFloors.front().direction == -1) && (distDown > 0))
     {
         distDown += PENALTY_FACTOR;
     }
-    if (distUp < distDown)
+
+    if ((distUp < 1) && (distDown < 1))
     {
-        mDirect = 1; // moving up
+        mDirect = 0;
     }
-    else
+    else if ((distUp > 0) && (distDown <= 0))
     {
-        mDirect = -1; // Moving down
+        mDirect = 1;
     }
+    else if ((distDown > 0) && (distUp <= 0))
+    {
+        mDirect = -1;
+    }
+    else if ((distUp < distDown))
+    {
+        mDirect = 1;
+       // cout << "1" << endl;
+    }
+    else if ((distDown <= distUp))
+    {
+        mDirect = -1; // moving up
+     //   cout << "-1, " << distDown << endl;
+    }
+   // cout << "MDIRECT: " << mDirect << endl;
 }
 
 vector<int> Elevator::searchReqList()
@@ -92,6 +118,13 @@ vector<int> Elevator::searchReqList()
                 {
                     matches.push_back(idx);
                 }
+                else if (mFloors[idx].numPpl > 2)
+                {
+                    matches.push_back(idx);
+                    mDirect = -1;
+                    cout << "Too many ppl swapping direct for: ";
+                    mFloors[idx].print();
+                }
             }
             idx++;
         }
@@ -106,6 +139,13 @@ vector<int> Elevator::searchReqList()
                 if ((mFloors[idx].direction == -1) || (mFloors[idx].direction == 0))
                 {
                     matches.push_back(idx);
+                }
+                else if (mFloors[idx].numPpl > 2)
+                {
+                    matches.push_back(idx);
+                    mDirect = 1;
+                    cout << "Too many ppl swapping direct for: ";
+                    mFloors[idx].print();
                 }
             }
             idx--;
@@ -139,7 +179,7 @@ int Elevator::checkTargMatch(int curr)
             for (int i = 0; i < hit.size(); i++)
             {
                 cout << "Elevator hit target floor: ";
-                mFloors[i].print();
+                mFloors[hit[i]].print();
                 mFloors.erase(mFloors.begin() + hit[i]);
             }
         }
@@ -163,13 +203,14 @@ void Elevator::runElevator()
         while ((dFloors != 0) && mRun)
         {
             this_thread::sleep_for(2s);
-            curr = (dFloors > 0) ? incCurrentFloor(1) : incCurrentFloor(-1);
+            curr = incCurrentFloor(); //(dFloors > 0) ? incCurrentFloor(1) : incCurrentFloor(-1);
             //target = getTargetFloor();
             //curr = getCurrentFloor();
             dFloors = checkTargMatch(curr);
             //cout << "dfloors: " << dFloors << endl;
             //numMoves++;
         }
+        this_thread::sleep_for(1s);
         // set direct to 0
         //mMutexFloors.lock();
         //if (!mFloors.empty())

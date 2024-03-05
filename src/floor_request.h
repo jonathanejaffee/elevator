@@ -45,10 +45,6 @@ struct floorRequest
         numPpl = 0;
     }
 
-    void setNumPpl(int num)
-    {
-        numPpl = num;
-    }
 
     bool operator<(const floorRequest& other) const { return floor < other.floor; }
 

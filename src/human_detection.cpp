@@ -4,7 +4,7 @@
 using namespace cv;
 using namespace cv::ml;
 using namespace hd;
-void HumanDetector::loadImage(string imgPath)
+int HumanDetector::loadImage(string imgPath)
 {
     Mat img = imread(imgPath);
     resize(img,img,Size(img.cols*2, img.rows*2));
@@ -34,6 +34,7 @@ void HumanDetector::loadImage(string imgPath)
     /// Show
     imshow("detected person", img);
     waitKey(100);
+    return found.size();
 }
 
 //void HumanDetector::detectHumans()

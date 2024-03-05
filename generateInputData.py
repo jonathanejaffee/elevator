@@ -19,8 +19,11 @@ def main(args):
     with open(args.output, 'w') as csvfile:
         csvwriter = csv.writer(csvfile)
         csvwriter.writerow(fields)
+        lastFloor = 0
         for i in range(args.number):
             floor = random.randint(1, args.floors)
+            while (floor == lastFloor):
+                floor = random.randint(1, args.floors)
             direction = random.randint(-1, 1)
             time = random.randint(0, args.time)
             image = random.choice(os.listdir(args.data))
@@ -28,6 +31,7 @@ def main(args):
             image = os.path.abspath(image)
             row = [floor, direction, image, time]
             csvwriter.writerow(row)
+            lastFloor = floor
 
 
 if __name__ == "__main__":

@@ -36,8 +36,11 @@ int main(int argc, char *argv[])
     {
         flreq::floorRequest floorData(line);
         hd::HumanDetector hd;
-        hd.loadImage(floorData.image);
+        int numPpl = hd.loadImage(floorData.image);
+        floorData.numPpl = numPpl;
         elevator.addRequest(floorData);
+        chrono::duration<int, milli> dt(floorData.time*1000);
+        this_thread::sleep_for(dt);
     }
     this_thread::sleep_for(60s);
     return 0;
