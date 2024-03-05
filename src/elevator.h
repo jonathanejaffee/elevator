@@ -27,8 +27,8 @@ public:
 
 private:
     void runElevator();
-    deque<flreq::floorRequest>::iterator searchReqList();
-    int checkTargMatch();
+    deque<flreq::floorRequest>::iterator searchReqList(int diff);
+    bool checkTargMatch();
     unsigned int mElevatorSpeed;
     int mCurrentFloor;
     bool mRun;

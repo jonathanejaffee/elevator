@@ -31,7 +31,7 @@ int main(int argc, char *argv[])
     string line;
     getline(inputFile, line);
     cout << "Parsing: " << line << endl;
-    ele::Elevator elevator(10, 8);
+    ele::Elevator elevator(10, 7);
     while (getline(inputFile, line))
     {
         flreq::floorRequest floorData(line);
