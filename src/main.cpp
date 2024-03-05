@@ -31,13 +31,13 @@ int main(int argc, char *argv[])
     string line;
     getline(inputFile, line);
     cout << "Parsing: " << line << endl;
-    ele::Elevator elevator(10, 1);
+    ele::Elevator elevator(10, 8);
     while (getline(inputFile, line))
     {
         flreq::floorRequest floorData(line);
         hd::HumanDetector hd;
         hd.loadImage(floorData.image);
-        elevator.addRequest(floorData.floor);
+        elevator.addRequest(floorData);
     }
     this_thread::sleep_for(60s);
     return 0;

@@ -13,6 +13,7 @@ struct floorRequest
     int direction;
     string image;
     int time;
+    int numPpl;
     floorRequest(){};
 
     floorRequest(string line, char delim = ',')
@@ -41,6 +42,19 @@ struct floorRequest
             image = splits[2];
             time = stoi(splits[3]);
         }
+        numPpl = 0;
+    }
+
+    void setNumPpl(int num)
+    {
+        numPpl = num;
+    }
+
+    bool operator<(const floorRequest& other) const { return floor < other.floor; }
+
+    void print()
+    {
+        cout << "Floor: " << floor << ", Direction: " << direction << ", with " << numPpl << " people" << endl;
     }
 };
 }

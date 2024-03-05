@@ -33,7 +33,7 @@ void HumanDetector::loadImage(string imgPath)
     }
     /// Show
     imshow("detected person", img);
-    waitKey(1000);
+    waitKey(100);
 }
 
 //void HumanDetector::detectHumans()
