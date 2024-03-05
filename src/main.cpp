@@ -39,5 +39,6 @@ int main(int argc, char *argv[])
         hd.loadImage(floorData.image);
         elevator.addRequest(floorData.floor);
     }
+    this_thread::sleep_for(60s);
     return 0;
 }

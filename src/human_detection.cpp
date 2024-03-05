@@ -14,7 +14,7 @@ void HumanDetector::loadImage(string imgPath)
     vector<double> weights;
 
     hog.detectMultiScale(img, found, weights);
-    std::cout << "FOUND: " << found.size() << ", For img: " << imgPath << std::endl;
+    //std::cout << "FOUND: " << found.size() << ", For img: " << imgPath << std::endl;
     /// draw detections and store location
     vector<Point> track;
     for( size_t i = 0; i < found.size(); i++ )

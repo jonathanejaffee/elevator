@@ -7,7 +7,6 @@ using namespace ele;
 
 Elevator::Elevator(unsigned int speed, int startingFloor) : mElevatorSpeed(speed),
     mCurrentFloor(startingFloor),
-    mTargetFloor(startingFloor),
     mRun(true)
 {
     cout << "Creating new Elevator with speed: " << mElevatorSpeed << ", starting floor: " << startingFloor << endl;
@@ -22,64 +21,82 @@ Elevator::~Elevator()
     mRun = false;
 }
 
-void Elevator::setTargetFloor(int target)
-{
-    lock_guard<mutex> lock(mMutexTarget); // Locks mutex, automatic storage duration, gurantees unlock on exit (ot of scope) of this function
-    mTargetFloor = target;
-    cout << "Target Floor: " << target << endl;
-}
-
 void Elevator::setCurrentFloor(int floor)
 {
-    lock_guard<mutex> lock(mMutexCurrent); // Locks mutex, automatic storage duration, gurantees unlock on exit (ot of scope) of this function
+    lock_guard<mutex> lock(mMutexFloors); // Locks mutex, automatic storage duration, gurantees unlock on exit (ot of scope) of this function
     mCurrentFloor = floor;
 }
 
-void Elevator::incCurrentFloor(int inc)
+int Elevator::incCurrentFloor(int inc)
 {
-    lock_guard<mutex> lock(mMutexCurrent); // Locks mutex, automatic storage duration, gurantees unlock on exit (ot of scope) of this function
+    lock_guard<mutex> lock(mMutexFloors); // Locks mutex, automatic storage duration, gurantees unlock on exit (ot of scope) of this function
     mCurrentFloor += inc;
     cout << "Current Floor: " << mCurrentFloor << endl;
+    return mCurrentFloor;
 }
 int Elevator::getCurrentFloor()
 {
-    lock_guard<mutex> lock(mMutexCurrent);
+    lock_guard<mutex> lock(mMutexFloors);
     return mCurrentFloor;
 }
 
 int Elevator::getTargetFloor()
 {
-    lock_guard<mutex> lock(mMutexTarget);
-    return mTargetFloor;
+    lock_guard<mutex> lock(mMutexFloors);
+
+    return (mFloors.empty() ? getCurrentFloor() : mFloors.back());
 }
 
 void Elevator::addRequest(int floor)
 {
     lock_guard<mutex> lock(mMutexFloors);
-    mFloors.push_back(floor);
+    cout << "Adding Target Floor: " << floor << endl; 
+    mFloors.push_front(floor);
 
 }
+
+int Elevator::checkTargMatch(int curr)
+{
+    lock_guard<mutex> lock(mMutexFloors);
+    int diff = 0;
+    if (!mFloors.empty())
+    {
+        diff = mFloors.back() - curr;
+        if (diff == 0)
+        {
+            mFloors.pop_back();
+            cout << "Elevator hit target floor: " << curr << endl;
+        }
+        //cout << "req sz: " << mFloors.size() << endl;
+    }
+    return diff;
+}
+
 
 void Elevator::runElevator()
 {
     while (mRun)
     {
-        //cout << "WEEEEE" << endl;
-        //this_thread::sleep_for(1s);
-        int dFloors = getTargetFloor() - getCurrentFloor();
-        while (dFloors != 0 && mRun)
+        int curr = getCurrentFloor();
+        int dFloors = checkTargMatch(curr);
+        int numMoves = 0;
+        while ((dFloors != 0) && mRun)
         {
             this_thread::sleep_for(1s);
-            (dFloors > 0) ? incCurrentFloor(1) : incCurrentFloor(-1);
-            dFloors = getTargetFloor() - getCurrentFloor();
+            curr = (dFloors > 0) ? incCurrentFloor(1) : incCurrentFloor(-1);
+            //target = getTargetFloor();
+            //curr = getCurrentFloor();
+            dFloors = checkTargMatch(curr);
+            //cout << "dfloors: " << dFloors << endl;
+            //numMoves++;
         }
-        mMutexFloors.lock();
-        if (!mFloors.empty())
-        {
-            int newTarg = mFloors.back();
-            mFloors.pop_back();
-            setTargetFloor(newTarg);
-        }
-        mMutexFloors.unlock();
+        //mMutexFloors.lock();
+        //if (!mFloors.empty())
+        //{
+        //    int newTarg = mFloors.back();
+        //    mFloors.pop_back();
+        //    setTargetFloor(newTarg);
+        //}
+        //mMutexFloors.unlock();
     }
 }
