@@ -23,6 +23,8 @@ public:
     //int getTargetFloor();
     void addRequest(flreq::floorRequest floor);
 
+    bool done();
+
 private:
     void runElevator();
     deque<flreq::floorRequest>::iterator searchReqList();

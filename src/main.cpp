@@ -42,6 +42,8 @@ int main(int argc, char *argv[])
         chrono::duration<int, milli> dt(floorData.time*1000);
         this_thread::sleep_for(dt);
     }
-    this_thread::sleep_for(60s);
+    cout << "All requests sent" << endl;
+    elevator.done();
+    //this_thread::sleep_for(120s);
     return 0;
 }

@@ -3,9 +3,12 @@
 #include <iostream>
 #include <utility>
 #include <algorithm>
-
+#include <condition_variable>
 using namespace std;
 using namespace ele;
+
+condition_variable cv;
+bool doneProcess = false;
 
 Elevator::Elevator(unsigned int speed, int startingFloor) : mElevatorSpeed(speed),
     mCurrentFloor(startingFloor),
@@ -96,7 +99,7 @@ deque<flreq::floorRequest>::iterator Elevator::searchReqList()
 
         if ((it -> direction != mDirect) && ((mDirect != 0) && (it ->direction != 0)))
         {
-            if (it -> numPpl > 2)
+            if (it -> numPpl > 200)
             {
                 bool changeDir = (it -> direction == 1) ? (mFloors.back().floor > mCurrentFloor) : (mFloors.front().floor < mCurrentFloor);
                 if (changeDir)
@@ -146,22 +149,24 @@ int Elevator::checkTargMatch()
     int diff = 0;
     if (!mFloors.empty())
     {
+        doneProcess = false;
         flreq::floorRequest targFloor = (mDirect > 0) ? mFloors.back() : mFloors.front();
         diff = targFloor.floor - curr;
-        cout << "diff: " << diff << endl;
-        if (diff == 0)
+        //cout << "diff: " << diff << endl;
+        if (diff == 0) // at one of the extremities
         {
             (mDirect > 0) ? mFloors.pop_back() : mFloors.pop_front();
             cout << "Elevator hit END target floor: ";
             targFloor.print();
             //mDirect = 0;
             //this_thread::sleep_for(1s);
-            mDirect *= -1;
+            //mDirect *= -1;
         }
         else
         {
             deque<flreq::floorRequest>::iterator hit = searchReqList();
             //deque<flreq::floorRequest>::iterator it;
+            mDirect = diff/abs(diff);
             while (hit != mFloors.end())
             {
                 cout << "Elevator hit target floor: ";
@@ -182,6 +187,8 @@ int Elevator::checkTargMatch()
     else
     {
         mDirect = 0;
+        doneProcess = true;
+        cv.notify_one();
     }
     return diff;
 }
@@ -189,6 +196,7 @@ int Elevator::checkTargMatch()
 
 void Elevator::runElevator()
 {
+    this_thread::sleep_for(5s);
     while (mRun)
     {
         //int curr = getCurrentFloor();
@@ -207,6 +215,14 @@ void Elevator::runElevator()
             //cout << "dfloors: " << dFloors << endl;
             //numMoves++;
         }
+        //this_thread::sleep_for(2s);
 
     }
+}
+
+bool Elevator::done()
+{
+    unique_lock<mutex> lock(mMutexFloors);
+    cv.wait(lock, [] { return doneProcess; });
+    return true;
 }
