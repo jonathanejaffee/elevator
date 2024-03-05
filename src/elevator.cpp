@@ -78,29 +78,59 @@ void Elevator::addRequest(flreq::floorRequest floor)
         distDown += PENALTY_FACTOR;
     }
 
-    if ((distUp < 1) && (distDown < 1))
+    int dDist = distUp - distDown;
+    cout << "dDist: " << dDist << endl;
+    if (dDist == 0)
     {
-        mDirect = 0;
+        //if ((distUp > 0) || (distDown > 0))
+        //{
+        //    mDirect = 1;
+        //}
+        //else
+        //{
+        //    mDirect = 0;
+        //}
     }
-    else if ((distUp > 0) && (distDown <= 0))
+    else
     {
-        mDirect = 1;
+        if (distUp == 0)
+        {
+            mDirect = -1;
+        }
+        else if (distDown == 0)
+        {
+            mDirect = 1;
+        }
+        else
+        {
+            mDirect = dDist/abs(dDist);
+        }
+        //mDirect = -1;
     }
-    else if ((distDown > 0) && (distUp <= 0))
-    {
-        mDirect = -1;
-    }
-    else if ((distUp < distDown))
-    {
-        mDirect = 1;
-       // cout << "1" << endl;
-    }
-    else if ((distDown <= distUp))
-    {
-        mDirect = -1; // moving up
-     //   cout << "-1, " << distDown << endl;
-    }
-   // cout << "MDIRECT: " << mDirect << endl;
+
+   // if ((distUp < 1) && (distDown < 1))
+   // {
+   //     mDirect = 0;
+   // }
+   // else if ((distUp > 0) && (distDown <= 0))
+   // {
+   //     mDirect = 1;
+   // }
+   // else if ((distDown > 0) && (distUp <= 0))
+   // {
+   //     mDirect = -1;
+   // }
+   // else if ((distUp < distDown))
+   // {
+   //     mDirect = 1;
+   //    // cout << "1" << endl;
+   // }
+   // else if ((distDown <= distUp))
+   // {
+   //     mDirect = -1; // moving up
+   //  //   cout << "-1, " << distDown << endl;
+   // }
+   //// cout << "MDIRECT: " << mDirect << endl;
 }
 
 vector<int> Elevator::searchReqList()
@@ -135,9 +165,12 @@ vector<int> Elevator::searchReqList()
                 else if (mFloors[idx].numPpl > 2)
                 {
                     matches.push_back(idx);
-                    mDirect = -1;
-                    cout << "Too many ppl swapping direct for: ";
-                    mFloors[idx].print();
+                    if (mFloors.front().floor < mCurrentFloor)
+                    {
+                        mDirect = -1;
+                        cout << "Too many ppl swapping direct for: ";
+                        mFloors[idx].print();
+                    }
                 }
             }
             idx++;
@@ -158,9 +191,12 @@ vector<int> Elevator::searchReqList()
                 else if (mFloors[idx].numPpl > 2)
                 {
                     matches.push_back(idx);
-                    mDirect = 1;
-                    cout << "Too many ppl swapping direct for: ";
-                    mFloors[idx].print();
+                    if (mFloors.back().floor > mCurrentFloor)
+                    {
+                        mDirect = 1;
+                        cout << "Too many ppl swapping direct for: ";
+                        mFloors[idx].print();
+                    }
                 }
             }
             idx--;
