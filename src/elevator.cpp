@@ -1,6 +1,7 @@
 
 #include "elevator.h"
 #include <iostream>
+#include <utility>
 #include <algorithm>
 
 using namespace std;
@@ -133,9 +134,9 @@ void Elevator::addRequest(flreq::floorRequest floor)
    //// cout << "MDIRECT: " << mDirect << endl;
 }
 
-vector<int> Elevator::searchReqList()
+vector<deque<flreq::floorRequest>::iterator> Elevator::searchReqList()
 {
-    vector<int> matches;
+    vector<deque<flreq::floorRequest>::iterator> matches;
     //lock_guard<mutex> lock(mMutexFloors);
 
     //if (mCurrentFloor == mFloors.back().floor)
@@ -151,61 +152,92 @@ vector<int> Elevator::searchReqList()
     //    return matches;
     //}
 
-    if (mDirect == 1) // going up
+    auto match = [&cf = as_const(mCurrentFloor)](const flreq::floorRequest& fl) -> bool { return (fl.floor == cf); };
+
+    auto it = find_if(mFloors.begin(), mFloors.end(), match);
+    while (it != mFloors.end())
     {
-        int idx = 0;
-        while ((mFloors[idx].floor <= mCurrentFloor) && (idx < mFloors.size()))
+        cout << "wee" << endl;
+        if ((it == mFloors.begin()) || (it == (mFloors.end() - 1)))
         {
-            if (mFloors[idx].floor == mCurrentFloor)
-            {
-                if ((mFloors[idx].direction == 1) || (mFloors[idx].direction == 0) || (idx == 0))
-                {
-                    matches.push_back(idx);
-                }
-                else if (mFloors[idx].numPpl > 2)
-                {
-                    matches.push_back(idx);
-                    if (mFloors.front().floor < mCurrentFloor)
-                    {
-                        mDirect = -1;
-                        cout << "Too many ppl swapping direct for: ";
-                        mFloors[idx].print();
-                    }
-                }
-            }
-            idx++;
+            cout << "MATCH1" << endl;
+            matches.push_back(it);
         }
-    }
-    else if (mDirect == -1)
-    {
-        int sz = mFloors.size() - 1;
-        int idx = sz;
-        while ((mFloors[idx].floor >= mCurrentFloor) && (idx >= 0))
+        else if ((it -> direction == mDirect) || (it -> direction == 0))
         {
-            if (mFloors[idx].floor == mCurrentFloor)
-            {
-                if ((mFloors[idx].direction == -1) || (mFloors[idx].direction == 0) || (idx == sz))
-                {
-                    matches.push_back(idx);
-                }
-                else if (mFloors[idx].numPpl > 2)
-                {
-                    matches.push_back(idx);
-                    if (mFloors.back().floor > mCurrentFloor)
-                    {
-                        mDirect = 1;
-                        cout << "Too many ppl swapping direct for: ";
-                        mFloors[idx].print();
-                    }
-                }
-            }
-            idx--;
+            cout << "MATCH2" << endl;
+            matches.push_back(it);
         }
+        else if (it -> numPpl > 2)
+        {
+            cout << "MATCH3" << endl;
+            matches.push_back(it);
+            bool changeDir = (it -> direction == 1) ? (mFloors.back().floor > mCurrentFloor) : (mFloors.front().floor < mCurrentFloor);
+            if (changeDir)
+            {
+                mDirect = it -> direction; // need to make sure there is something in that direction
+                cout << "Too many ppl swapping direct for: ";
+                it->print();
+            }
+        }
+        it = find_if(it+1, mFloors.end(), match);
     }
-    else
-    {
-        cout << "this shouldnt be 0" << endl;
-    }
+
+    //if (mDirect == 1) // going up
+    //{
+    //    int idx = 0;
+    //    while ((mFloors[idx].floor <= mCurrentFloor) && (idx < mFloors.size()))
+    //    {
+    //        if (mFloors[idx].floor == mCurrentFloor)
+    //        {
+    //            if ((mFloors[idx].direction == 1) || (mFloors[idx].direction == 0) || (idx == 0))
+    //            {
+    //                matches.push_back(idx);
+    //            }
+    //            else if (mFloors[idx].numPpl > 2)
+    //            {
+    //                matches.push_back(idx);
+    //                if (mFloors.front().floor < mCurrentFloor)
+    //                {
+    //                    mDirect = -1;
+    //                    cout << "Too many ppl swapping direct for: ";
+    //                    mFloors[idx].print();
+    //                }
+    //            }
+    //        }
+    //        idx++;
+    //    }
+    //}
+    //else if (mDirect == -1)
+    //{
+    //    int sz = mFloors.size() - 1;
+    //    int idx = sz;
+    //    while ((mFloors[idx].floor >= mCurrentFloor) && (idx >= 0))
+    //    {
+    //        if (mFloors[idx].floor == mCurrentFloor)
+    //        {
+    //            if ((mFloors[idx].direction == -1) || (mFloors[idx].direction == 0) || (idx == sz))
+    //            {
+    //                matches.push_back(idx);
+    //            }
+    //            else if (mFloors[idx].numPpl > 2)
+    //            {
+    //                matches.push_back(idx);
+    //                if (mFloors.back().floor > mCurrentFloor)
+    //                {
+    //                    mDirect = 1;
+    //                    cout << "Too many ppl swapping direct for: ";
+    //                    mFloors[idx].print();
+    //                }
+    //            }
+    //        }
+    //        idx--;
+    //    }
+    //}
+    //else
+    //{
+    //    cout << "this shouldnt be 0" << endl;
+    //}
     return matches;
 }
 
@@ -228,12 +260,14 @@ int Elevator::checkTargMatch(int curr)
         }
         else
         {
-            vector<int> hit = searchReqList();
+            vector<deque<flreq::floorRequest>::iterator> hit = searchReqList();
+            deque<flreq::floorRequest>::iterator it;
             for (int i = 0; i < hit.size(); i++)
             {
+                it = hit[i];
                 cout << "Elevator hit target floor: ";
-                mFloors[hit[i]].print();
-                mFloors.erase(mFloors.begin() + hit[i]);
+                it -> print();
+                mFloors.erase(it);
             }
         }
         //cout << "req sz: " << mFloors.size() << endl;
