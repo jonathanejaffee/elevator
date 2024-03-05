@@ -4,6 +4,7 @@
 #include <algorithm> // Used for sort
 #include "floor_request.h"
 #include "human_detection.h" // Temp
+#include "elevator.h"
 using namespace std;
 
 /**
@@ -30,11 +31,13 @@ int main(int argc, char *argv[])
     string line;
     getline(inputFile, line);
     cout << "Parsing: " << line << endl;
+    ele::Elevator elevator(10, 1);
     while (getline(inputFile, line))
     {
         flreq::floorRequest floorData(line);
         hd::HumanDetector hd;
         hd.loadImage(floorData.image);
+        elevator.addRequest(floorData.floor);
     }
     return 0;
 }
