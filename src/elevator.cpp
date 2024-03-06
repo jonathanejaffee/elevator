@@ -1,3 +1,8 @@
+/**
+ * @author Jonathan Jaffee
+ * @details - Following is to maybe get me a job.
+*/
+
 // Includes
 #include "elevator.h"
 #include <iostream>
@@ -6,6 +11,8 @@
 
 using namespace std;
 using namespace ele;
+
+// Note - extremity = smallest or largest floor number
 
 /**
  * Create the elevator
@@ -37,6 +44,7 @@ Elevator::Elevator(unsigned int speed, unsigned int wait, int lobbyCap, int star
 Elevator::~Elevator()
 {
     mRun = false; // This will kill the elevator run thread
+    mDoneProcess = true;
 }
 
 /**
@@ -65,11 +73,14 @@ void Elevator::addRequest(flreq::floorRequest floor)
     }
     // Lock to protect shared resources
     lock_guard<mutex> lock(mMutexFloors); // Automatic storage duration, unlocks on destruction
-    cout << "Adding Target Floor: " << floor.floor << ", going: " << floor.direction << endl; 
+    cout << "Adding New Floor Request: " << floor.floor << ", going: " << floor.direction << endl; 
     mFloors.push_front(floor); // Add to the request list
     sort(mFloors.begin(), mFloors.end()); // Sort the request list (uses comparator override in floorRequest class)
     int currPos = mCurrentFloor + mDirect; // Assume the elevator may be moving, so the current position will be last position plus direction of motion
     const int PENALTY_FACTOR = 2; // Penalty factor, hardcoded for now
+
+    // Not a big fan of all the ifs, but I've been working on this too long now.
+
     /**
      * A note on the penalty factor ^
      * When trying to asess the extremity distances to travel up or down, if the farthest up or down request
@@ -123,139 +134,162 @@ void Elevator::addRequest(flreq::floorRequest floor)
     }
 }
 
+/**
+ * Following function is for finding target floors that arent extremities.
+ * @param diff = difference between current floor and target extremity (top/low floor depending on direction of travel)
+*/
 deque<flreq::floorRequest>::iterator Elevator::searchReqList(int diff)
 {
-    mDirect = diff/abs(diff);
+    mDirect = diff/abs(diff); // Set the elevator direction
+
+    // Lambda function used to match a target floor to current floor in std::find_if
     auto match = [&cf = as_const(mCurrentFloor)](const flreq::floorRequest& fl) -> bool { return (fl.floor == cf); };
 
-    auto it = find_if(mFloors.begin(), mFloors.end(), match);
-    if (it != mFloors.end())
+    auto it = find_if(mFloors.begin(), mFloors.end(), match); // Find based on the match lambda function
+
+    if (it != mFloors.end()) // We found a match
     {
+        // We found a match, but it is not in the direction the elevator is moving (someone wants to go down, but the elevator is going up)
         if ((it -> direction != mDirect) && ((mDirect != 0) && (it ->direction != 0)))
         {
-            if (it -> numPpl > mLobbyCap)
+            if (it -> numPpl >= mLobbyCap) // Check if the lobby is at capacity, if it is, stop anyway and swap directions of travel.
             {
-                bool changeDir = (it -> direction == 1) ? (mFloors.back().floor > mCurrentFloor) : (mFloors.front().floor < mCurrentFloor);
-                if (changeDir)
+                bool changeDir = (it -> direction == 1) ? (mFloors.back().floor > mCurrentFloor) : (mFloors.front().floor < mCurrentFloor); // Should we swap directions (check that we can)
+                if (changeDir) // Elevator direction should be changed to help clear this overfilling lobby
                 {
                     mDirect = it -> direction; // need to make sure there is something in that direction
-                    cout << "Too many ppl swapping direct for: ";
+                    cout << "Passing by a full elevator lobby that wants to go in opposite direction. Switching elevator directions to clear lobby, for floor: ";
                     it->print();
                 }
             }
             else
             {
-                it = mFloors.end();
+                it = mFloors.end(); // Ignore since we cannot do anything (no floors to stop at in that direction)
             }
         }
     }
-    return it;
+    return it; // Return a match for floor that is not extremity
 }
 
+/**
+ * Following function is to check if the current floor is a tagrt floor
+*/
 bool Elevator::checkTargMatch()
 {
-    lock_guard<mutex> lock(mMutexFloors);
-    int diff = 0;
-    //bool stopped = false;
+    lock_guard<mutex> lock(mMutexFloors); // Lock mutex, auto storage duration, unlocks on destruction
+    int diff = 0; // Difference between current floor and extremity in direction we are moving.
+    // Check if there are any floors to move to
     if (!mFloors.empty())
     {
-        mDoneProcess = false;
-        auto it = (mDirect > 0) ? (mFloors.end() - 1) : mFloors.begin();
-        diff = it->floor - mCurrentFloor;
-        cout << "Fl: " << it->floor << ", dir " << it->direction << endl;
+        mDoneProcess = false; // Are not done processing floors
+        auto it = (mDirect > 0) ? (mFloors.end() - 1) : mFloors.begin(); // Get an iterator to the extremity in the direction we are moving
+        diff = it->floor - mCurrentFloor; // Difference in floors between current floor and target extremity
+
+        /**
+         * A lambda function to find best request to service if there are multiple for a given floor extremity
+         * Captures some class members as constants
+        */
         auto findBest = [diff, it, &mDirect = as_const(mDirect), &mCurrentFloor = as_const(mCurrentFloor), &mFloors = as_const(mFloors)] () -> deque<flreq::floorRequest>::iterator
         {
-            if (mFloors.size() < 2)
+            if (mFloors.size() < 2) // There are not enough floor in the request to bother
             {
-                return it;
+                return it; // Return
             }
-            deque<flreq::floorRequest>::iterator bestIt = it;
-            int newDiff = diff;
+            deque<flreq::floorRequest>::iterator bestIt = it; // New iterator used to return what the best match is
+            int newDiff = diff; // Keep track of new differences
             while (newDiff == 0)
             {
+                // A good match is one that either matches the direction of travel of the elevator, or has no direction at all (people getting off)
+                // The below check looks for that condition
                 if ((bestIt -> direction == mDirect) || (bestIt -> direction == 0) || (mDirect == 0))
                 {
-                    cout << "bestIt" << endl;
-                    bestIt -> print();
-                    return bestIt;
+                    return bestIt; // Return the match
                 }
-                (mDirect > 0) ? bestIt-- : bestIt++;
+                (mDirect > 0) ? bestIt-- : bestIt++; // Increment or decrement the iterator
+
+                // Check if we have gone too far, in which case returnt he original
                 if ((bestIt < mFloors.begin()) || (bestIt >= mFloors.end()))
                 {
                     return it;
                 }
-                newDiff = bestIt->floor - mCurrentFloor;
+                newDiff = bestIt->floor - mCurrentFloor; // Recalc the difference
             }
-            cout << "It" << endl;
-            it -> print();
-            return it;
+            return it; // No matches, return original
         };
 
         if (diff == 0) // at one of the extremities
         {
-            deque<flreq::floorRequest>::iterator bestIt = findBest();
-            cout << "Elevator hit END target floor: ";
+            deque<flreq::floorRequest>::iterator bestIt = findBest(); // Find best match for this extremity
+            cout << "Elevator hit target floor: ";
             bestIt->print();
-            mFloorsVisited.push_back(bestIt->floor);
-            mFloors.erase(bestIt);
-            mStopped = true;
-            //stopped = true;
+            mFloorsVisited.push_back(bestIt->floor); // Add to the list of floors visited
+            mFloors.erase(bestIt); // Erase from request deque
+            mStopped = true; // Stop elevator to service this floor
         }
         else
         {
-            deque<flreq::floorRequest>::iterator hit = searchReqList(diff);
-            if (hit != mFloors.end())
+            deque<flreq::floorRequest>::iterator hit = searchReqList(diff); // Search for target floors that are not extremities
+            if (hit != mFloors.end()) // Found a target floor for where the elevator is at
             {
                 cout << "Elevator hit target floor: ";
                 hit -> print();
                 mFloorsVisited.push_back(hit->floor);
                 mFloors.erase(hit);
                 mStopped = true;
-                return mStopped;
+                return mStopped; // Return now to skip lower logic, stop elevator
             }
-            mStopped = false;
+            mStopped = false; // No match, don't stop elevator
         }
     }
-    else
+    else // Nothing to do
     {
         mDirect = 0;
         mStopped = true;
-        mDoneProcess = true;
-        condV.notify_one();
+        mDoneProcess = true; // All requests processed
+        condV.notify_one(); // Notify the conditional variable that we finished all requests
     }
     return mStopped;
 }
 
-
+/**
+ * The following runs as a thread and controls the elevator by working through the deque of floor requests
+ * NOTE - there is no explicit mutec locks in this funtion, so during those sleep call requests can still be added
+*/
 void Elevator::runElevator()
 {
     cout << "Starting Elevator" << endl;
-    this_thread::sleep_for(mElevatorStopTime);
+    this_thread::sleep_for(mElevatorStopTime); // Idk figured it should take some time to boot an elevator system
     cout << "Elevator Started" << endl;
-    bool stop = true;
-    while (mRun)
+    bool stop = true; // Elevator is stopped to start
+    while (mRun) // Thread
     {
-        this_thread::sleep_for(mElevatorSpeed);
-        mTimeTaken += mElevatorSpeed.count();
         if (!stop)
         {
-            incCurrentFloor();
+            incCurrentFloor(); // Increment the floor the elevator is on
+            this_thread::sleep_for(mElevatorSpeed); // Simulate the time it takes to get there
+            mTimeTaken += mElevatorSpeed.count(); // increment time taken
         }
         else
         {
-            cout << "stop" << endl;
-            this_thread::sleep_for(mElevatorStopTime);
-            mTimeTaken += mElevatorStopTime.count();
+            cout << "Elevator is Stopped" << endl;
+            this_thread::sleep_for(mElevatorStopTime); // Simulate how long the elevator stops for
+            mTimeTaken += mElevatorStopTime.count();   // Record time delta
         }
-        stop = checkTargMatch();
+        stop = checkTargMatch(); // Check for match between target floor and current floor
     }
 }
 
+/**
+ * Check if the elevator has finished processing it's requests, if so return pair of floors visited as a vector, and unsigned int of time taken
+*/
 pair<vector<int>, unsigned int> Elevator::done()
 {
-    unique_lock<mutex> lock(mMutexFloors);
+    unique_lock<mutex> lock(mMutexFloors); // create lock
+    // The below line will wait, without locking the lock, until it is notified by the condition variable. 
+    // Allows for waiting without resource contention
     condV.wait(lock, [&mDoneProcess= as_const(mDoneProcess)] { return mDoneProcess; });
-    cout << "Done" << endl;
-    this_thread::sleep_for(3s);
-    return make_pair(mFloorsVisited, (mTimeTaken/1000));
+    mRun = false; // Kill thread
+    cout << "Done" << endl; // We are done!
+    this_thread::sleep_for(1s); // Let threads die
+    return make_pair(mFloorsVisited, (mTimeTaken/1000)); // Convert to seconds
 }
