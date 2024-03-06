@@ -31,8 +31,3 @@
 -   (base) jjaffee@jjaffee-pc:~/proj/elevator> ./elevator 3 1 2 8
 -   Total Travel Time: 90
 -   Floors visted in order: 3, 1, 2, 8
-
-
-LOOK algorithm:
-
-![Alt text](image.png)
