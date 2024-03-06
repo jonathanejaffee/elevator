@@ -3,22 +3,25 @@
 #include <iostream>
 #include <utility>
 #include <algorithm>
-#include <condition_variable>
+//#include <condition_variable>
 using namespace std;
 using namespace ele;
 
-std::condition_variable condV;
-bool doneProcess = false;
+//std::condition_variable condV;
+//bool doneProcess = false;
 
 Elevator::Elevator(unsigned int speed, unsigned int wait, int lobbyCap, int startingFloor) : mCurrentFloor(startingFloor),
     mRun(true),
     mDirect(0),
-    mLobbyCap(lobbyCap)
+    mLobbyCap(lobbyCap),
+    mTimeTaken(0),
+    mStopped(true)
 {
     cout << "Creating new elevator with speed: " << speed << ", Stop wait time: " << wait << ", Lobby Capacity: " << lobbyCap << ", starting floor: " << startingFloor << endl;
     cout << "Not - the above is order of optional command line args after input file" << endl;
     mElevatorSpeed = chrono::duration<int, milli>(speed*1000);
     mElevatorStopTime = chrono::duration<int, milli>(wait*1000);
+    mFloors = deque<flreq::floorRequest>();
     mHumanDetect = hd::HumanDetector();
     thread eleThread(&Elevator::runElevator, this);
     eleThread.detach();
@@ -67,7 +70,8 @@ void Elevator::addRequest(flreq::floorRequest floor)
     {
         distDown += PENALTY_FACTOR;
     }
-
+    cout << "distUP: " << distUp << endl;
+    cout << "distDown: " << distDown << endl;
     int dDist = distUp - distDown;
     if (distUp == 0)
     {
@@ -79,12 +83,13 @@ void Elevator::addRequest(flreq::floorRequest floor)
     }
     else
     {
-        if (mDirect == 0)
+        if ((mDirect == 0) || mStopped)
         {
-            mDirect = dDist/abs(dDist);
+            cout << "weee" << endl;
+            mDirect = -dDist/abs(dDist);
         }
     }
-
+    cout << "MDIRECT: " << mDirect << endl;
 }
 
 deque<flreq::floorRequest>::iterator Elevator::searchReqList(int diff)
@@ -121,26 +126,38 @@ bool Elevator::checkTargMatch()
     int curr = getCurrentFloor();
     lock_guard<mutex> lock(mMutexFloors);
     int diff = 0;
-    bool stopped = false;
+    //bool stopped = false;
     if (!mFloors.empty())
     {
         doneProcess = false;
         auto it = (mDirect > 0) ? (mFloors.end() - 1) : mFloors.begin();
         diff = it->floor - curr;
-
-        auto findBest = [diff, it, &mDirect = as_const(mDirect), &mCurrentFloor = as_const(mCurrentFloor)] () -> deque<flreq::floorRequest>::iterator
+        cout << "Fl: " << it->floor << ", dir " << it->direction << endl;
+        auto findBest = [diff, it, &mDirect = as_const(mDirect), &mCurrentFloor = as_const(mCurrentFloor), &mFloors = as_const(mFloors)] () -> deque<flreq::floorRequest>::iterator
         {
+            if (mFloors.size() < 2)
+            {
+                return it;
+            }
             deque<flreq::floorRequest>::iterator bestIt = it;
             int newDiff = diff;
             while (newDiff == 0)
             {
                 if ((bestIt -> direction == mDirect) || (bestIt -> direction == 0) || (mDirect == 0))
                 {
+                    cout << "bestIt" << endl;
+                    bestIt -> print();
                     return bestIt;
                 }
                 (mDirect > 0) ? bestIt-- : bestIt++;
+                if ((bestIt < mFloors.begin()) || (bestIt >= mFloors.end()))
+                {
+                    return it;
+                }
                 newDiff = bestIt->floor - mCurrentFloor;
             }
+            cout << "It" << endl;
+            it -> print();
             return it;
         };
 
@@ -149,8 +166,10 @@ bool Elevator::checkTargMatch()
             deque<flreq::floorRequest>::iterator bestIt = findBest();
             cout << "Elevator hit END target floor: ";
             bestIt->print();
+            mFloorsVisited.push_back(bestIt->floor);
             mFloors.erase(bestIt);
-            stopped = true;
+            mStopped = true;
+            //stopped = true;
         }
         else
         {
@@ -159,29 +178,35 @@ bool Elevator::checkTargMatch()
             {
                 cout << "Elevator hit target floor: ";
                 hit -> print();
+                mFloorsVisited.push_back(hit->floor);
                 mFloors.erase(hit);
-                stopped = true;
+                mStopped = true;
+                return mStopped;
             }
+            mStopped = false;
         }
     }
     else
     {
         mDirect = 0;
+        mStopped = true;
         doneProcess = true;
         condV.notify_one();
     }
-    return stopped;
+    return mStopped;
 }
 
 
 void Elevator::runElevator()
 {
     cout << "Starting Elevator" << endl;
-    //this_thread::sleep_for(5s);
+    this_thread::sleep_for(mElevatorStopTime);
+    cout << "Elevator Started" << endl;
     bool stop = true;
     while (mRun)
     {
         this_thread::sleep_for(mElevatorSpeed);
+        mTimeTaken += mElevatorSpeed.count();
         if (!stop)
         {
             incCurrentFloor();
@@ -190,14 +215,17 @@ void Elevator::runElevator()
         {
             cout << "stop" << endl;
             this_thread::sleep_for(mElevatorStopTime);
+            mTimeTaken += mElevatorStopTime.count();
         }
         stop = checkTargMatch();
     }
 }
 
-bool Elevator::done()
+pair<vector<int>, unsigned int> Elevator::done()
 {
     unique_lock<mutex> lock(mMutexFloors);
-    condV.wait(lock, [] { return doneProcess; });
-    return true;
+    condV.wait(lock, [&doneProcess= as_const(doneProcess)] { return doneProcess; });
+    cout << "Done" << endl;
+    this_thread::sleep_for(3s);
+    return make_pair(mFloorsVisited, (mTimeTaken/1000));
 }

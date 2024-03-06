@@ -65,7 +65,13 @@ int main(int argc, char *argv[])
         this_thread::sleep_for(dt);
     }
     cout << "All requests sent" << endl;
-    elevator.done();
+    pair<vector<int>, unsigned int> retPair = elevator.done();
+    cout << "Elevator sim complete. Total time: " << retPair.second << endl;
+    cout << "Floors visited (in order): " << endl;
+    for (int i = 0; i < retPair.first.size(); i++)
+    {
+        cout << retPair.first[i] << endl;
+    }
     //this_thread::sleep_for(120s);
     return 0;
 }

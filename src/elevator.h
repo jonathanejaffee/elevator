@@ -6,6 +6,7 @@
 #include <thread>
 #include "floor_request.h"
 #include "human_detection.h"
+#include <condition_variable>
 
 using namespace std;
 
@@ -25,7 +26,7 @@ public:
     //int getTargetFloor();
     void addRequest(flreq::floorRequest floor);
 
-    bool done();
+    pair<vector<int>, unsigned int> done();
 
 private:
     void runElevator();
@@ -41,6 +42,11 @@ private:
     mutex mMutexFloors;
     deque<flreq::floorRequest> mFloors;
     hd::HumanDetector mHumanDetect;
+    std::condition_variable condV;
+    bool doneProcess = false;
+    std::vector<int> mFloorsVisited;
+    unsigned int mTimeTaken;
+    bool mStopped;
 
 };
 }
