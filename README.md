@@ -1,3 +1,5 @@
+-   Executable is elevator - built for linux.
+
 *** This is the simple implementation of the elevator - for complex see branch: complex_branch ***
 
 *** See simple-elevator-demo video in link below ***
