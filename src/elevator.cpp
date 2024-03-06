@@ -29,7 +29,7 @@ Elevator::Elevator(unsigned int speed, unsigned int wait, int lobbyCap, int star
     mStopped(true)
 {
     cout << "Creating new elevator with speed: " << speed << ", Stop wait time: " << wait << ", Lobby Capacity: " << lobbyCap << ", starting floor: " << startingFloor << endl;
-    cout << "Not - the above is order of optional command line args after input file" << endl;
+    cout << "Note - the above is order of optional command line args after input file" << endl;
     mElevatorSpeed = chrono::duration<int, milli>(speed*1000); // convert to milliseconds
     mElevatorStopTime = chrono::duration<int, milli>(wait*1000); // ^
     mFloors = deque<flreq::floorRequest>(); // Create the deque of floors
