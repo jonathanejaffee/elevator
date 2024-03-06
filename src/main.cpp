@@ -1,15 +1,15 @@
 // Headers
 #include <iostream>
 #include <fstream>
-#include <algorithm> // Used for sort
 #include "floor_request.h"
-#include "human_detection.h" // Temp
 #include "elevator.h"
+
 using namespace std;
 
 /**
- * @param argc = number of arguments. Will be program name + the floor requests
- * @param argv array of char* input arguments. index 0 is program name, 1 is starting floor, rest are floors to visit
+ * @param argc = number of arguments. Will be program name + input file + optional arguments
+ * @param argv array of char* input arguments. index 0 is program name, 1 input data file, 2 = elevator speed, 3 = time to stop on a floor,
+ * 4 = max allowable capacity for lobbies, 5 = starting floor
 */
 int main(int argc, char *argv[])
 {
@@ -18,6 +18,7 @@ int main(int argc, char *argv[])
     int maxLobbyCap = 4;
     int startFloor = 1;
     string inputData;
+    // Parse command line arguments
     if (argc > 5)
     {
         startFloor = atoi(argv[5]);
@@ -46,6 +47,7 @@ int main(int argc, char *argv[])
         exit(-1);
     }
 
+    // Parse the input csv
     inputData.assign(argv[1]);
     cout << "Input data: " << inputData << endl;
     ifstream inputFile(inputData);
@@ -57,14 +59,11 @@ int main(int argc, char *argv[])
     while (getline(inputFile, line))
     {
         flreq::floorRequest floorData(line);
-        //hd::HumanDetector hd;
-        //int numPpl = hd.loadImage(floorData.image);
-        //floorData.numPpl = numPpl;
         elevator.addRequest(floorData);
-        chrono::duration<int, milli> dt(floorData.time*1000);
-        this_thread::sleep_for(dt);
+        chrono::duration<int, milli> dt(floorData.time*1000); // convert to seconds
+        this_thread::sleep_for(dt); // Meter the requests being sent to mimick people pushing elevator buttons at different times.
     }
-    cout << "All requests sent" << endl;
+    cout << "All requests sent to elevator" << endl;
     pair<vector<int>, unsigned int> retPair = elevator.done();
     cout << "Elevator sim complete. Total time: " << retPair.second << endl;
     cout << "Floors visited (in order): " << endl;
@@ -72,6 +71,5 @@ int main(int argc, char *argv[])
     {
         cout << retPair.first[i] << endl;
     }
-    //this_thread::sleep_for(120s);
     return 0;
 }

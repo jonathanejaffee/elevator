@@ -5,18 +5,26 @@ using namespace cv;
 using namespace cv::ml;
 using namespace hd;
 
-int HumanDetector::detectHumans(string imgPath)
+// Constructor
+HumanDetector::HumanDetector()
+{
+    mHog.setSVMDetector(HOGDescriptor::getDefaultPeopleDetector()); // Create the model
+}
+
+/**
+ * This cass detects humans in an image using openCV's histogram of gradients (HOG) pre-trained people detector model.
+ * Default hyper-parameter used.
+*/
+int HumanDetector::detectHumans(const string& imgPath) // pass by const ref, dont have to copy.
 {
     Mat img = imread(imgPath);
-    resize(img,img,Size(img.cols*2, img.rows*2));
-    HOGDescriptor hog;
-    hog.setSVMDetector(HOGDescriptor::getDefaultPeopleDetector());
+    resize(img,img,Size(1280, 960)); // Resize
     vector<Rect> found;
     vector<double> weights;
 
-    hog.detectMultiScale(img, found, weights);
-    //std::cout << "FOUND: " << found.size() << ", For img: " << imgPath << std::endl;
-    /// draw detections and store location
+    mHog.detectMultiScale(img, found, weights); // Find detections
+
+    // save detection drawings
     vector<Point> track;
     for( size_t i = 0; i < found.size(); i++ )
     {
@@ -28,17 +36,14 @@ int HumanDetector::detectHumans(string imgPath)
         track.push_back(Point(found[i].x+found[i].width/2,found[i].y+found[i].height/2));
     }
 
-    /// plot the track so far
+    // Create box around detect
     for(size_t i = 1; i < track.size(); i++){
         line(img, track[i-1], track[i], Scalar(255,255,0), 2);
     }
-    /// Show
-    imshow("detected person", img);
-    waitKey(100);
+    // Show the people detected
+    imshow("detected people", img);
+    waitKey(500);
+    destroyAllWindows();
     return found.size();
 }
 
-//void HumanDetector::detectHumans()
-//{
-//
-//}
