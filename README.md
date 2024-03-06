@@ -1,4 +1,6 @@
 
+-   Executable is elevator - built for linux. 
+
 **** This is the complex version of the elevator - for the simple version switch to branch simple-elevator ****
 
 This version of the elevator incorporates additional complexity to account for new information, and be an overall higher fidelity sim. 
