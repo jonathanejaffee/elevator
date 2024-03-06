@@ -34,6 +34,7 @@ Elevator::Elevator(unsigned int speed, unsigned int wait, int lobbyCap, int star
     mElevatorStopTime = chrono::duration<int, milli>(wait*1000); // ^
     mFloors = deque<flreq::floorRequest>(); // Create the deque of floors
     mHumanDetect = hd::HumanDetector(); // Instantiate the human detector
+    mFloorsVisited.push_back(startingFloor);
     thread eleThread(&Elevator::runElevator, this); // Spawn the elevator thread, which processes mFloors
     eleThread.detach(); // Let it run independently
 }

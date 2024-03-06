@@ -2,6 +2,8 @@
 
 This version of the elevator incorporates additional complexity to account for new information, and be an overall higher fidelity sim. 
 
+**** Please see complex-elevator.mkv for a demo vid ****
+
 Added complexities:
 
 -    1. Realtime execution/modeling of ansynchronous requests
@@ -60,7 +62,86 @@ Files:
     - ./data - contains images in which human_detction.h/.cpp uses for image recognition. The input files in ./input contain a path to specific images to use in ./data
 
 
+----------- How to Run ----------------------------------------
+./elevator ./path/to/input/file elevatorSpeed timeToStopAtTargetFloor capacityOfLobby startingFloor
 
+*Note - only the path to the input file is required, there are defaults for the other arguments.
 
-./elevator ./input/inputDataDemoFullLobby.csv 2 2 3 6 - showcase reverse logic for full lobby
-./elevator ./input/inputDataDemoFullLobby.csv 2 2 10 6 - regular realtime logic
+Examples:
+./elevator ./input/inputDataDemoFullLobby.csv 2 2 3 6 (this is a good showcase of reverse logic for full lobby)
+./elevator ./input/inputDataDemoFullLobby.csv 2 2 10 6  (regular logic that will follow the expected path)
+./elevator ./input/inputDataDemoSlowReq.csv 2 2 10 6 (shows requests being slowly metered to the elevator)
+
+--------------------------------------Example Output---------------------------------------------------------- 
+
+*** It'll also flash the images from people detection
+
+---------------Input Data-----------------------
+floor,direction,image,time
+7,1,/home/jjaffee/proj/elevator/data/18.png,0
+8,-1,/home/jjaffee/proj/elevator/data/47.png,0
+9,1,/home/jjaffee/proj/elevator/data/100.png,0
+10,0,/home/jjaffee/proj/elevator/data/91.png,0
+1,0,/home/jjaffee/proj/elevator/data/91.png,0
+--------------------------------------------------
+
+----------------------------Output (notice the switch in direction from a full lobby) ------------------
+
+(base) jjaffee@jjaffee-pc:~/proj/elevator> ./elevator ./input/inputDataDemoFullLobby.csv 2 2 3 6
+Input data: ./input/inputDataDemoFullLobby.csv
+Parsing: floor,direction,image,time
+Creating new elevator with speed: 2, Stop wait time: 2, Lobby Capacity: 3, starting floor: 6
+Not - the above is order of optional command line args after input file
+Checking number of people in lobby on floor 7Starting Elevator
+QSettings::value: Empty key passed
+QSettings::value: Empty key passed
+. 1 people detected.
+Adding New Floor Request: 7, going: 1
+Checking number of people in lobby on floor 8. 4 people detected.
+Adding New Floor Request: 8, going: -1
+Checking number of people in lobby on floor 9. 1 people detected.
+Adding New Floor Request: 9, going: 1
+Adding New Floor Request: 10, going: 0
+Adding New Floor Request: 1, going: 0
+All requests sent to elevator
+Elevator Started
+Elevator is Stopped
+Current Floor: 7
+Elevator hit target floor: Floor: 7, Direction: 1
+Elevator is Stopped
+Current Floor: 8
+Passing by a full elevator lobby that wants to go in opposite direction. Switching elevator directions to clear lobby, for floor: Floor: 8, Direction: -1
+Elevator hit target floor: Floor: 8, Direction: -1
+Elevator is Stopped
+Current Floor: 7
+Current Floor: 6
+Current Floor: 5
+Current Floor: 4
+Current Floor: 3
+Current Floor: 2
+Current Floor: 1
+Elevator hit target floor: Floor: 1, Direction: 0
+Elevator is Stopped
+Current Floor: 2
+Current Floor: 3
+Current Floor: 4
+Current Floor: 5
+Current Floor: 6
+Current Floor: 7
+Current Floor: 8
+Current Floor: 9
+Elevator hit target floor: Floor: 9, Direction: 1
+Elevator is Stopped
+Current Floor: 10
+Elevator hit target floor: Floor: 10, Direction: 0
+Elevator is Stopped
+Elevator is Stopped
+Done
+Elevator sim complete. Total time: 48
+Floors visited (in order): 
+6
+7
+8
+1
+9
+10
