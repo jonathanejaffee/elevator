@@ -1,6 +1,8 @@
 *** This is the simple implementation of the elevator - for complex see branch: complex_branch ***
 
-*** See simple-elevator-demo video ***
+*** See simple-elevator-demo video in link below ***
+
+https://drive.google.com/drive/folders/1-ZlJ9yBXsDHpnFeqPMY5AVL8lQj9kqKw?usp=drive_link
 
 -   Assumptions:
     -   Elevator has no information regarding intended direction of passenger, as such order 1-2-3 is equivalent to 3-2-1 sice desired traversal/visit order
