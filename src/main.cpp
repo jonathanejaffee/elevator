@@ -57,9 +57,9 @@ int main(int argc, char *argv[])
     while (getline(inputFile, line))
     {
         flreq::floorRequest floorData(line);
-        hd::HumanDetector hd;
-        int numPpl = hd.loadImage(floorData.image);
-        floorData.numPpl = numPpl;
+        //hd::HumanDetector hd;
+        //int numPpl = hd.loadImage(floorData.image);
+        //floorData.numPpl = numPpl;
         elevator.addRequest(floorData);
         chrono::duration<int, milli> dt(floorData.time*1000);
         this_thread::sleep_for(dt);

@@ -5,6 +5,7 @@
 #include <deque>
 #include <thread>
 #include "floor_request.h"
+#include "human_detection.h"
 
 using namespace std;
 
@@ -39,6 +40,7 @@ private:
     //mutex mMutexCurrent;
     mutex mMutexFloors;
     deque<flreq::floorRequest> mFloors;
+    hd::HumanDetector mHumanDetect;
 
 };
 }

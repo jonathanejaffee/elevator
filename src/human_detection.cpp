@@ -4,7 +4,8 @@
 using namespace cv;
 using namespace cv::ml;
 using namespace hd;
-int HumanDetector::loadImage(string imgPath)
+
+int HumanDetector::detectHumans(string imgPath)
 {
     Mat img = imread(imgPath);
     resize(img,img,Size(img.cols*2, img.rows*2));

@@ -7,7 +7,7 @@
 using namespace std;
 using namespace ele;
 
-condition_variable cv;
+std::condition_variable condV;
 bool doneProcess = false;
 
 Elevator::Elevator(unsigned int speed, unsigned int wait, int lobbyCap, int startingFloor) : mCurrentFloor(startingFloor),
@@ -19,6 +19,7 @@ Elevator::Elevator(unsigned int speed, unsigned int wait, int lobbyCap, int star
     cout << "Not - the above is order of optional command line args after input file" << endl;
     mElevatorSpeed = chrono::duration<int, milli>(speed*1000);
     mElevatorStopTime = chrono::duration<int, milli>(wait*1000);
+    mHumanDetect = hd::HumanDetector();
     thread eleThread(&Elevator::runElevator, this);
     eleThread.detach();
 }
@@ -45,6 +46,10 @@ int Elevator::getCurrentFloor()
 
 void Elevator::addRequest(flreq::floorRequest floor)
 {
+    if (floor.direction != 0)
+    {
+        floor.numPpl = mHumanDetect.detectHumans(floor.image);
+    }
     lock_guard<mutex> lock(mMutexFloors);
     cout << "Adding Target Floor: " << floor.floor << endl; 
     mFloors.push_front(floor);
@@ -163,7 +168,7 @@ bool Elevator::checkTargMatch()
     {
         mDirect = 0;
         doneProcess = true;
-        cv.notify_one();
+        condV.notify_one();
     }
     return stopped;
 }
@@ -193,6 +198,6 @@ void Elevator::runElevator()
 bool Elevator::done()
 {
     unique_lock<mutex> lock(mMutexFloors);
-    cv.wait(lock, [] { return doneProcess; });
+    condV.wait(lock, [] { return doneProcess; });
     return true;
 }
