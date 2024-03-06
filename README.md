@@ -3,7 +3,9 @@
 
 This version of the elevator incorporates additional complexity to account for new information, and be an overall higher fidelity sim. 
 
-**** Please see complex-elevator.mkv for a demo vid ****
+**** Please see complex_elevator_demo.mkv link below for a demo vid ****
+Demo:
+https://drive.google.com/drive/folders/1-ZlJ9yBXsDHpnFeqPMY5AVL8lQj9kqKw?usp=sharing
 
 Added complexities:
 
@@ -64,6 +66,10 @@ Files:
 
 
 ----------- How to Run ----------------------------------------
+
+**** Requires ./data and ./input folders, or your equivalent
+**Update pathing in input files, or run python3 generateInputData.py (use -h for info on args, all args optional)
+
 ./elevator ./path/to/input/file elevatorSpeed timeToStopAtTargetFloor capacityOfLobby startingFloor
 
 *Note - only the path to the input file is required, there are defaults for the other arguments.
