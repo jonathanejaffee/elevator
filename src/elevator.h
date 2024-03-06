@@ -15,7 +15,8 @@ class Elevator
 
 public:
 
-    Elevator(unsigned int speed, int startingFloor);
+    Elevator(unsigned int speed, unsigned int waitTime, int maxCap, int startingFloor);
+    Elevator() = delete;
     ~Elevator();
     //void setCurrentFloor(int floor);
     int incCurrentFloor(); //int inc);
@@ -29,14 +30,15 @@ private:
     void runElevator();
     deque<flreq::floorRequest>::iterator searchReqList(int diff);
     bool checkTargMatch();
-    unsigned int mElevatorSpeed;
+    chrono::duration<unsigned int, milli> mElevatorSpeed;
+    chrono::duration<unsigned int, milli> mElevatorStopTime;
+    int mLobbyCap;
     int mCurrentFloor;
     bool mRun;
     int mDirect;
     //mutex mMutexCurrent;
     mutex mMutexFloors;
     deque<flreq::floorRequest> mFloors;
-    unsigned int mNumPpl;
 
 };
 }

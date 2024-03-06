@@ -10,13 +10,15 @@ using namespace ele;
 condition_variable cv;
 bool doneProcess = false;
 
-Elevator::Elevator(unsigned int speed, int startingFloor) : mElevatorSpeed(speed),
-    mCurrentFloor(startingFloor),
+Elevator::Elevator(unsigned int speed, unsigned int wait, int lobbyCap, int startingFloor) : mCurrentFloor(startingFloor),
     mRun(true),
     mDirect(0),
-    mNumPpl(0)
+    mLobbyCap(lobbyCap)
 {
-    cout << "Creating new Elevator with speed: " << mElevatorSpeed << ", starting floor: " << startingFloor << endl;
+    cout << "Creating new elevator with speed: " << speed << ", Stop wait time: " << wait << ", Lobby Capacity: " << lobbyCap << ", starting floor: " << startingFloor << endl;
+    cout << "Not - the above is order of optional command line args after input file" << endl;
+    mElevatorSpeed = chrono::duration<int, milli>(speed*1000);
+    mElevatorStopTime = chrono::duration<int, milli>(wait*1000);
     thread eleThread(&Elevator::runElevator, this);
     eleThread.detach();
 }
@@ -90,7 +92,7 @@ deque<flreq::floorRequest>::iterator Elevator::searchReqList(int diff)
     {
         if ((it -> direction != mDirect) && ((mDirect != 0) && (it ->direction != 0)))
         {
-            if (it -> numPpl > 1)
+            if (it -> numPpl > mLobbyCap)
             {
                 bool changeDir = (it -> direction == 1) ? (mFloors.back().floor > mCurrentFloor) : (mFloors.front().floor < mCurrentFloor);
                 if (changeDir)
@@ -169,11 +171,12 @@ bool Elevator::checkTargMatch()
 
 void Elevator::runElevator()
 {
-    this_thread::sleep_for(5s);
+    cout << "Starting Elevator" << endl;
+    //this_thread::sleep_for(5s);
     bool stop = true;
     while (mRun)
     {
-        this_thread::sleep_for(2s);
+        this_thread::sleep_for(mElevatorSpeed);
         if (!stop)
         {
             incCurrentFloor();
@@ -181,7 +184,7 @@ void Elevator::runElevator()
         else
         {
             cout << "stop" << endl;
-            this_thread::sleep_for(2s);
+            this_thread::sleep_for(mElevatorStopTime);
         }
         stop = checkTargMatch();
     }

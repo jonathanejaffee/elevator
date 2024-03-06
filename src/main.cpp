@@ -13,17 +13,39 @@ using namespace std;
 */
 int main(int argc, char *argv[])
 {
-    int speed = 10;
+    unsigned int speed = 10;
+    unsigned int stopTime = 2;
+    int maxLobbyCap = 4;
+    int startFloor = 1;
     string inputData;
-    if (argc > 2)
+    if (argc > 5)
+    {
+        startFloor = atoi(argv[5]);
+        maxLobbyCap = atoi(argv[4]);
+        stopTime = atoi(argv[3]);
+        speed = atoi(argv[2]);
+    }
+    else if (argc > 4)
+    {
+        maxLobbyCap = atoi(argv[4]);
+        stopTime = atoi(argv[3]);
+        speed = atoi(argv[2]);
+    }
+    else if (argc > 3)
+    {
+        stopTime = atoi(argv[3]);
+        speed = atoi(argv[2]);
+    }
+    else if (argc > 2)
     {
         speed = atoi(argv[2]);
     }
     else if (argc < 2) // Make sure number of input arguments makes sense
     {
-        cout << "ERROR -> Not enough input arguments. Please pass path to input data, and optionally elevator speed." << endl;
+        cout << "ERROR -> Not enough input arguments. Please pass path to input data, and optionally after elevator speed, wait time, lobby capacity, and start floor." << endl;
         exit(-1);
     }
+
     inputData.assign(argv[1]);
     cout << "Input data: " << inputData << endl;
     ifstream inputFile(inputData);
@@ -31,7 +53,7 @@ int main(int argc, char *argv[])
     string line;
     getline(inputFile, line);
     cout << "Parsing: " << line << endl;
-    ele::Elevator elevator(10, 7);
+    ele::Elevator elevator(speed, stopTime, maxLobbyCap, startFloor);
     while (getline(inputFile, line))
     {
         flreq::floorRequest floorData(line);
