@@ -56,7 +56,7 @@ struct floorRequest
     // Print the floor request
     void print()
     {
-        cout << "Floor: " << floor << ", Direction: " << direction << ", with " << numPpl << " people" << endl;
+        cout << "Floor: " << floor << ", Direction: " << direction << endl;
     }
 };
 }

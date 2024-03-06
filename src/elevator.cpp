@@ -68,8 +68,9 @@ void Elevator::addRequest(flreq::floorRequest floor)
     // If the floor direction is up or down, we know it's coming from a lobby, so going to check how many people are in that lobby
     if (floor.direction != 0)
     {
-        cout << "Checking number of people in lobby on floor: " << floor.floor << endl;
+        cout << "Checking number of people in lobby on floor " << floor.floor;
         floor.numPpl = mHumanDetect.detectHumans(floor.image); // Get the Number of people in the lobby
+        cout << ". " << floor.numPpl << " people detected." << endl;
     }
     // Lock to protect shared resources
     lock_guard<mutex> lock(mMutexFloors); // Automatic storage duration, unlocks on destruction

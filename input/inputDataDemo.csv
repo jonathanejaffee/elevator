@@ -1,0 +1,6 @@
+floor,direction,image,time
+7,1,/home/jjaffee/proj/elevator/data/18.png,0
+8,-1,/home/jjaffee/proj/elevator/data/19.png,0
+8,1,/home/jjaffee/proj/elevator/data/100.png,0
+10,0,/home/jjaffee/proj/elevator/data/91.png,0
+1,0,/home/jjaffee/proj/elevator/data/91.png,0
