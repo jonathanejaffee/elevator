@@ -85,7 +85,7 @@ floor,direction,image,time
 1,0,/home/jjaffee/proj/elevator/data/91.png,0
 --------------------------------------------------
 
-----------------------------Output (notice the switch in direction from a full lobby) ------------------
+****Output (notice the switch in direction from a full lobby)***
 
 (base) jjaffee@jjaffee-pc:~/proj/elevator> ./elevator ./input/inputDataDemoFullLobby.csv 2 2 3 6
 Input data: ./input/inputDataDemoFullLobby.csv
